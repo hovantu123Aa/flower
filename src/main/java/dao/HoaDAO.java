@@ -8,9 +8,10 @@ import context.DbContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import model.Hoa;
-import static sun.jvm.hotspot.debugger.x86.X86ThreadContext.PS;
+
 
 /**
  *
@@ -22,7 +23,7 @@ public class HoaDAO {
     PreparedStatement ps;
     ResultSet rs;
 
-    public ArrayList<Hoa> getTop10() {
+    public ArrayList<Hoa> getTop10() throws SQLException {
         ArrayList<Hoa> ds = new ArrayList<>();
         String sql = "select top 10 * from Hoa order by gia desc";
         conn = DbContext.getConnection();
@@ -30,7 +31,7 @@ public class HoaDAO {
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
             while (rs.next()) {
-                 ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
+                ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
             }
         } catch (Exception ex) {
             System.out.println("Loi:" + ex.toString());
@@ -39,7 +40,7 @@ public class HoaDAO {
     }
 
     //Phương thức đọc hoa theo thể loại
-    public ArrayList<Hoa> getByCategoryId(int maloai) {
+    public ArrayList<Hoa> getByCategoryId(int maloai) throws SQLException {
         ArrayList<Hoa> ds = new ArrayList<>();
         String sql = "select * from Hoa where maloai=?";
         conn = DbContext.getConnection();
@@ -49,50 +50,32 @@ public class HoaDAO {
             rs = ps.executeQuery();
             while (rs.next()) {
                 ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
-            }
-        } catch (Exception ex) {
-            System.out.println("Loi:" + ex.toString());
-        }
-        return ds;
-    }  
-     public ArrayList<Hoa> getByCategoryId(int maloai) {
-        ArrayList<Hoa> ds = new ArrayList<>();
-        String sql = "select * from Hoa where maloai=?";
-        conn = DbContext.getConnection();
-        try {
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, maloai);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
-            }
-        } catch (Exception ex) {
-            System.out.println("Loi:" + ex.toString());
-        }
-        return ds;
-    }  
-    //phuong thuc doc tat ca san pham (Hoa) từ CSDL
-    public ArrayList<Hoa> getBypage( int pageIndex, int pageSize) {
-        ArrayList<Hoa> ds = new ArrayList<>();
-        String sql = "select * from Hoa order by mahoa OFFSET? ROW FETCH NEXT ? ROWS ONLY";
-        conn = DbContext.getConnection();
-        try {
-            ps = conn.prepareStatement(sql);
-            rs = ps.executeQuery();
-            ps.setInt(1,(pageIndex-1)*pageSize);
-            ps.setInt(2, pageSize);
-            while (rs.next()) {
-                 ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
             }
         } catch (Exception ex) {
             System.out.println("Loi:" + ex.toString());
         }
         return ds;
     }
-    
+
+    //phuong thuc doc tat ca san pham (Hoa) từ CSDL
+    public ArrayList<Hoa> getAll() throws SQLException {
+        ArrayList<Hoa> ds = new ArrayList<>();
+        String sql = "select * from Hoa";
+        conn = DbContext.getConnection();
+        try {
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
+            }
+        } catch (Exception ex) {
+            System.out.println("Loi:" + ex.toString());
+        }
+        return ds;
+    }
+
     //phuong thuc them mới sản phẩm (Hoa)
-    public boolean Insert (Hoa hoa)
-    {
+    public boolean Insert(Hoa hoa) throws SQLException {
         String sql = "insert into hoa (tenhoa,gia,hinh,maloai,ngaycapnhat) values (?,?,?,?,?)";
         conn = DbContext.getConnection();
         try {
@@ -103,17 +86,17 @@ public class HoaDAO {
             ps.setInt(4, hoa.getMaloai());
             ps.setDate(5, hoa.getNgaycapnhat());
             int kq = ps.executeUpdate();
-            if(kq>0)
-               return true;
+            if (kq > 0) {
+                return true;
+            }
         } catch (Exception ex) {
             System.out.println("Loi:" + ex.toString());
         }
         return false;
     }
-    
-     //phuong thuc cập nhật sản phẩm (Hoa)
-    public boolean Update (Hoa hoa)
-    {
+
+    //phuong thuc cập nhật sản phẩm (Hoa)
+    public boolean Update(Hoa hoa) throws SQLException {
         String sql = "update hoa set tenhoa=?,gia=?,hinh=?,maloai=?,ngaycapnhat=? where mahoa=?";
         conn = DbContext.getConnection();
         try {
@@ -125,34 +108,35 @@ public class HoaDAO {
             ps.setDate(5, hoa.getNgaycapnhat());
             ps.setInt(6, hoa.getMahoa());
             int kq = ps.executeUpdate();
-            if(kq>0)
-               return true;
+            if (kq > 0) {
+                return true;
+            }
         } catch (Exception ex) {
             System.out.println("Loi:" + ex.toString());
         }
         return false;
     }
-    
+
     //phuong thuc xoá sản phẩm (Hoa)
-    public boolean Delete (int mahoa)
-    {
+    public boolean Delete(int mahoa) throws SQLException {
         String sql = "delete from hoa where mahoa=?";
         conn = DbContext.getConnection();
         try {
-            ps = conn.prepareStatement(sql);           
-            ps.setInt(1, mahoa);           
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, mahoa);
             int kq = ps.executeUpdate();
-            if(kq>0)
-               return true;
+            if (kq > 0) {
+                return true;
+            }
         } catch (Exception ex) {
             System.out.println("Loi:" + ex.toString());
         }
         return false;
-    } 
-    
+    }
+
     //phuong thuc lấy thông tin sản phẩm (Hoa) theo mã hoa 
-    public Hoa getById(int mahoa) {
-        Hoa kq=null;
+    public Hoa getById(int mahoa) throws SQLException {
+        Hoa kq = null;
         String sql = "select * from Hoa where mahoa=?";
         conn = DbContext.getConnection();
         try {
@@ -160,7 +144,7 @@ public class HoaDAO {
             ps.setInt(1, mahoa);
             rs = ps.executeQuery();
             if (rs.next()) {
-                kq =new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6));
+                kq = new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6));
             }
         } catch (Exception ex) {
             System.out.println("Loi:" + ex.toString());
@@ -168,25 +152,38 @@ public class HoaDAO {
         return kq;
     }
 
-    public static void main(String[] args) {
+    public ArrayList<Hoa> getByPage(int pageIndex, int pageSize) {
+        ArrayList<Hoa> ds = new ArrayList<>();
+        String sql = "select * from Hoa order by mahoa OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        conn = DbContext.getConnection();
+        try {
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, (pageIndex - 1) * pageSize);
+            ps.setInt(2, pageSize);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                ds.add(new Hoa(rs.getInt(1), rs.getString(2), rs.getDouble(3), rs.getString(4), rs.getInt(5), rs.getDate(6)));
+            }
+        } catch (Exception ex) {
+            System.out.println("Loi" + ex.toString());
+        }
+        return ds;
+    }
+
+    public static void main(String[] args) throws SQLException {
         HoaDAO hoaDao = new HoaDAO();
         System.out.println("Lay tat ca hoa");
-        int pageSize=5;
-        ArrayList<Hoa> dsHoa = hoaDao.getBypage(2, pageSize);
+        ArrayList<Hoa> dsHoa = hoaDao.getByPage(2, 5);
         for (Hoa hoa : dsHoa) {
             System.out.println(hoa);
-        }  
-        
+        }
+
         //tìm hoa theo mahoa=1
         System.out.println("Tim hoa co mahoa=1");
         Hoa kq = hoaDao.getById(1);
-        if(kq!=null)
-        {
+        if (kq != null) {
             System.out.println(kq);
         }
     }
-
-    public ArrayList<Hoa> getAll() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 }
+        
